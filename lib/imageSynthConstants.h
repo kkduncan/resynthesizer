@@ -1,5 +1,5 @@
-/* 
-Constants for inner  image synthesis engine.
+/*
+  Constants for inner  image synthesis engine.
 
   Copyright (C) 2010, 2011  Lloyd Konneker
 
@@ -17,22 +17,25 @@ Constants for inner  image synthesis engine.
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#pragma once
+#ifndef IMAGE_SYNTH_CONSTANTS_H_
+#define IMAGE_SYNTH_CONSTANTS_H_
 
 /*
-Max size of neighborhood (patch)
-Allocated on stack in reentrant version.
-Engine returns error if parameter.patchSize exceeds this.
+  Max size of neighborhood (patch)
+  Allocated on stack in reentrant version.
+  Engine returns error if parameter.patchSize exceeds this.
 */
 #define IMAGE_SYNTH_MAX_NEIGHBORS 64
 
 
 /*
-Constants for selection masks
-and transparency pixelel.
-These should match the calling program's constants.
+ Constants for selection masks
+ and transparency pixelel.
+ These should match the calling program's constants.
 
-!!! Partially selected and partially transparent.
-*/
+  !!! Partially selected and partially transparent.
+ */
 #define MASK_TOTALLY_SELECTED 0xFF
 #define MASK_UNSELECTED 0
 
@@ -41,20 +44,21 @@ These should match the calling program's constants.
 #define PIXELEL_BLACK 0
 
 
-/* 
-These specify the layout of our Pixel, which is not the same as Gimp !!!
-e.g. MRGBW
-These are the only constants: other counts and indexes are dynamic:
-  index of the first and last color and map pixelels
-  index of the alpha pixelel
-  count of color and map pixelel
+/*
+ These specify the layout of our Pixel, which is not the same as Gimp !!!
+ e.g. MRGBW
+ These are the only constants: other counts and indexes are dynamic:
+ index of the first and last color and map pixelels
+ index of the alpha pixelel
+ count of color and map pixelel
 */
 #define MASK_PIXELEL_INDEX  0
 #define FIRST_PIXELEL_INDEX 1	/* Starting color pixelel (usually Red) */
-/* 
-The most pixelels imageSynth will store and use to match. 
-1 mask + 3 colors + 1 alpha + 3 map colors
-*/
+
+/*
+ The most pixelels imageSynth will store and use to match.
+ 1 mask + 3 colors + 1 alpha + 3 map colors
+ */
 #define MAX_IMAGE_SYNTH_BPP 8
 
 
@@ -73,13 +77,14 @@ The mapMetric domain is not gushort and values depend on a user given parameter.
 #define MAX_WEIGHT G_MAXUSHORT
 
 /*
-A constant multiplying factor of the map metric function.
-*/
+ A constant multiplying factor of the map metric function.
+ */
 #define MAP_MULTIPLIER 4.0
+
 /*
-TODO scale the mapMetric and use a constant for the extreme value,
-for slightly better performance??
-#define MAX_MAP_DIFF 65569    // G_MAXUINT = 4,294,967,295 = 32^2 - 1
+ TODO scale the mapMetric and use a constant for the extreme value,
+ for slightly better performance??
+ #define MAX_MAP_DIFF 65569    // G_MAXUINT = 4,294,967,295 = 32^2 - 1
 */
 
 /*
@@ -89,7 +94,7 @@ else terminate repeated passes over the target.
 #define IMAGE_SYNTH_TERMINATE_FRACTION 0.1
 
 /*
-The fraction ( count of points in a band / total target points) 
+The fraction ( count of points in a band / total target points)
 for banded randomization of target points.
 */
 #define IMAGE_SYNTH_BAND_FRACTION 0.1
@@ -98,3 +103,6 @@ for banded randomization of target points.
 // Count of target pixels synthesized per deep progress callback
 // !!! This must in binary all x lower bits ones i.e. 2^12-1
 #define IMAGE_SYNTH_CALLBACK_COUNT 4095
+
+
+#endif /* IMAGE_SYNTH_CONSTANTS_H_ */

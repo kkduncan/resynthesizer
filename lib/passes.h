@@ -14,9 +14,9 @@ are often a transition and need the most work to produce a good result.
 
 The original code just lengthened targetPoints vector by duplicating a prefix:
   for(int n=targetPoints->len;n>0;) {
-    n = n*3/4; // <- note magic number... the more passes, the higher the quality, maybe
-    for(int i=0;i<n;i++)
-      targetPoints.push_back(targetPoints[i]);
+	n = n*3/4; // <- note magic number... the more passes, the higher the quality, maybe
+	for(int i=0;i<n;i++)
+	  targetPoints.push_back(targetPoints[i]);
   }
 and just iterated over the target_point vector, either forward or back:
 for(int i=targetPoints->len-1;i>=0;i--) { // do a fraction, then more, etc. then all
@@ -44,55 +44,56 @@ TODO experiments on other ways of repeating synthesis.
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <stdio.h>
+#pragma once
+#ifndef RESYNTH_PASSES_H_
+#define RESYNTH_PASSES_H_
+
+#include <cstdio>
 
 #define MAX_PASSES 6
-typedef guint TRepetionParameters[MAX_PASSES][2] ;
+typedef guint TRepetionParameters[MAX_PASSES][2];
 
-static guint
-estimatePixelsToSynth(TRepetionParameters repetition_params)
+static guint estimatePixelsToSynth(TRepetionParameters repetition_params)
 {
-  guint pass;
-  guint pixelCount=0;
+	guint pass;
+	guint pixelCount = 0;
 
-  for (pass=0; pass<MAX_PASSES; pass++)
-    pixelCount += repetition_params[pass][1];
-  return pixelCount;
+	for (pass = 0; pass < MAX_PASSES; pass++)
+	{
+		pixelCount += repetition_params[pass][1];
+	}
+
+	return pixelCount;
 }
 
 
+static guint prepare_repetition_parameters(TRepetionParameters repetition_params, guint countTargetPoints)
+{
+	guint i;
+	guint n = countTargetPoints;
+	guint total_targets;
 
-static guint
-prepare_repetition_parameters(
-  TRepetionParameters repetition_params,
-  guint countTargetPoints
-  )
-{ 
-  guint i;
-  guint n = countTargetPoints;
-  guint total_targets;
-  
-  /* First pass over all points  */
-  repetition_params[0][0] = 0;  
-  repetition_params[0][1] = n;
-  total_targets = n;
-  
-  /* 
-  Second pass over all points, subsequent passes over declining numbers at an exponential rate. 
-  */
-  for (i=1; i<MAX_PASSES; i++) 
-  {
-    repetition_params[i][0] = 0;    /* Start index of iteration. Not used, starts at 0 always, see the loop. */
-    repetition_params[i][1] = n;    /* End index of iteration. */
-    total_targets += n;
-    n = (guint) n*3/4;
-  }
-  return total_targets;
+	/* First pass over all points  */
+	repetition_params[0][0] = 0;
+	repetition_params[0][1] = n;
+	total_targets = n;
+
+	/*
+	 * Second pass over all points, subsequent passes over declining numbers at an exponential rate.
+ 	 */
+	for (i = 1; i < MAX_PASSES; i++)
+	{
+		repetition_params[i][0] = 0;    /* Start index of iteration. Not used, starts at 0 always, see the loop. */
+		repetition_params[i][1] = n;    /* End index of iteration. */
+		total_targets += n;
+		n = (guint)n * 3 / 4;
+	}
+	return total_targets;
 }
 
 
 #ifdef ORIGINAL_PASSES
-/* 
+/*
 Each pass synthesizes more target points than previous.
 Each pass repeat synthesizes the target points of the previous pass.
 
@@ -103,25 +104,23 @@ and the last pass include all the pixels.
 
 Just a little experimentation seems to show it is not an improvement.
 */
-static guint
-prepare_repetition_parameters(
-  TRepetionParameters repetition_params,
-  guint countTargetPoints
-  )
-{ 
-  gint i;
-  guint n = countTargetPoints;
-  guint total_targets=0;
-  
-  for (i=MAX_PASSES-1; i>=0; i--) 
-  {
-    repetition_params[i][0] = 0;    /* Start index of iteration. Not used, starts at 0 always, see the loop. */
-    repetition_params[i][1] = n;    /* End index of iteration. */
-    total_targets += n;
-    n = (guint) n*3/4;
-    // printf("pass %d n is %d", i, n);
-  }
-  return total_targets;
+static guint prepare_repetition_parameters(TRepetionParameters repetition_params, guint countTargetPoints)
+{
+	gint i;
+	guint n = countTargetPoints;
+	guint total_targets = 0;
+
+	for (i = MAX_PASSES - 1; i >= 0; i--)
+	{
+		repetition_params[i][0] = 0;    /* Start index of iteration. Not used, starts at 0 always, see the loop. */
+		repetition_params[i][1] = n;    /* End index of iteration. */
+		total_targets += n;
+		n = (guint)n * 3 / 4;
+		// printf("pass %d n is %d", i, n);
+	}
+	return total_targets;
 }
+
 #endif
 
+#endif /* RESYNTH_PASSES_H_ */

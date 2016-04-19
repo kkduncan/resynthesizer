@@ -34,133 +34,95 @@ and pass that to the compare func which sorts on the latter.
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#if FALSE
-static void
-dumpTargetPoints(pointVector targetPoints)
-{
-  guint i;
-  for(i=0; i<targetPoints->len; i++)
-      {
-      Coordinates point = g_array_index(targetPoints, Coordinates, i);
-      g_printf("%d %d\n", point.x, point.y);
-      }
-}
-static void
-dumpSortArray(GArray* sortArray)
-{
-  guint i;
-  g_printf("Sort array:\n");
-  for(i=0; i<sortArray->len; i++)
-      {
-      TSortElementStruct sortElement = g_array_index(sortArray, TSortElementStruct, i) ;
-      g_printf("%d %d %f\n", sortElement.targetPoint.x, sortElement.targetPoint.y, sortElement.proportionToCenter );
-      }
-}
-#endif
+#pragma once
+#ifndef RESYNTH_BRUSHFIRE_H_
+#define RESYNTH_BRUSHFIRE_H_
 
-/*The grad (radial from 0..400) or angle of this vector (point) */
-static guint
-grad (Coordinates a)
+
+/** The grad (radial from 0..400) or angle of this vector (point) */
+static guint grad(Coordinates a)
 {
-  /* !!! x and y order in atan2 */
-  return (guint) (atan2( (gfloat) a.y, (gfloat) a.x) * 200 / G_PI + 200);
+	/* !!! x and y order in atan2 */
+	return (guint)(atan2((gfloat)a.y, (gfloat)a.x) * 200 / G_PI + 200);
 }
 
 
 
-/* Array of computed maximum distances over all points along a ray (radius) */
-static void
-prepare_max_cartesian_along_ray(
-    pointVector targetPoints,   // Already offsets from center
-    guint* max_cartesian_along_ray
-    )
+/** Array of computed maximum distances over all points along a ray (radius) */
+static void prepare_max_cartesian_along_ray(PointVector targetPoints, guint* max_cartesian_along_ray)
 {
-  guint i;
+	guint i;
 
-  for(i=0; i<401; i++)
-    max_cartesian_along_ray[i] = 0;
+	for (i = 0; i < 401; i++)
+	{
+		max_cartesian_along_ray[i] = 0;
+	}
 
-  for(i=0; i<targetPoints->len; i++)
-  {
-    Coordinates point = g_array_index(targetPoints, Coordinates, i);
-    // Assert point is an offset from center
-    guint cartesian = point.x * point.x + point.y * point.y;
-    guint ray = grad(point);
-    if ( cartesian > max_cartesian_along_ray[ray] )
-      max_cartesian_along_ray[ray] = cartesian;
-  }
-  /*
-   * Not all rays in grad units will have points on them, i.e. may have 0 max cartesian.
-   * But all rays on which some targetPoint falls WILL have non-zero max.
-   * Except for edge case of a single pixel target, which is handled safely in proportion_inward().
-   * We only index into this array by the rays for targetPoints (not every ray.)
-   */
-  /* dump_max_grad(); */
+	for (i = 0; i < targetPoints->len; i++)
+	{
+		Coordinates point = g_array_index(targetPoints, Coordinates, i);
+		// Assert point is an offset from center
+		guint cartesian = point.x * point.x + point.y * point.y;
+		guint ray = grad(point);
+		if (cartesian > max_cartesian_along_ray[ray])
+			max_cartesian_along_ray[ray] = cartesian;
+	}
 }
 
 
 /*
-Ratio of this offset's distance from center to max distance of any point along
-the radial through this offset.
-Float in range (0,1] or NaN
-Note a is an offset, i.e. a vector from center, not from the origin.
-*/
-static gfloat
-proportion_inward(
-  const Coordinates *a,
-  guint* max_cartesian_along_ray
-  )
+ * Ratio of this offset's distance from center to max distance of any point along
+ * the radial through this offset.
+ * Float in range (0,1] or NaN
+ * Note a is an offset, i.e. a vector from center, not from the origin.
+ */
+static gfloat proportion_inward(const Coordinates *a, guint* max_cartesian_along_ray)
 {
-  guint ray = grad(*a);
-  /*
-   * Note that max_cartesian_along_ray[ray] MAY equal zero, for a target having only one pixel, etc.
-   * Floating division yields NaN which always compares FALSE.
-   */
-  return (gfloat) ((a->y * a->y) + (a->x * a->x)) / max_cartesian_along_ray[ray];
+	guint ray = grad(*a);
+	/*
+	 * Note that max_cartesian_along_ray[ray] MAY equal zero, for a target having only one pixel, etc.
+	 * Floating division yields NaN which always compares FALSE.
+	 */
+	return (gfloat)((a->y * a->y) + (a->x * a->x)) / max_cartesian_along_ray[ray];
 }
+
 
 /*
-Copy targetPoint coordinates to sorting struct.
-Precompute another field to sort on: proportional distance from center.
-*/
-static GArray*
-targetPointsToSortArray(
-  pointVector targetPoints
-  )
+ * Copy targetPoint coordinates to sorting struct.
+ * Precompute another field to sort on: proportional distance from center.
+ */
+static GArray* targetPointsToSortArray(PointVector targetPoints)
 {
-  GArray* sortArray = g_array_sized_new (FALSE, TRUE, sizeof(TSortElementStruct), targetPoints->len);
+	GArray* sortArray = g_array_sized_new(FALSE, TRUE, sizeof(TSortElementStruct), targetPoints->len);
 
-  guint max_cartesian_along_ray[401];
-  prepare_max_cartesian_along_ray(targetPoints, max_cartesian_along_ray);
+	guint max_cartesian_along_ray[401];
+	prepare_max_cartesian_along_ray(targetPoints, max_cartesian_along_ray);
 
-  guint i;
-  TSortElementStruct sortElement;
-  Coordinates point;
-  for(i=0; i<targetPoints->len; i++)
-    {
-    point = g_array_index(targetPoints, Coordinates, i); // Allocates, but len is zero: no elements
-    sortElement.targetPoint = point;
-    sortElement.proportionToCenter = proportion_inward(&point, max_cartesian_along_ray);
-    g_array_append_val(sortArray, sortElement);
-    // g_printf("%d %d %d\n", sortElement.targetPoint.x, sortElement.targetPoint.y, sortElement.proportionToCenter );
-    }
-  return sortArray;
-}
-
-// Extract coordinates from sort array, and free the sort array
-static void
-targetPointsFromSortArray(
-    pointVector targetPoints,
-    GArray* sortArray
-  )
-{
-  guint i;
-  for(i=0; i<targetPoints->len; i++)
-    {
-    g_array_index(targetPoints, Coordinates, i) = g_array_index(sortArray, TSortElementStruct, i).targetPoint;
-    }
-  g_array_free(sortArray, TRUE);
+	guint i;
+	TSortElementStruct sortElement;
+	Coordinates point;
+	for (i = 0; i < targetPoints->len; i++)
+	{
+		point = g_array_index(targetPoints, Coordinates, i); // Allocates, but len is zero: no elements
+		sortElement.targetPoint = point;
+		sortElement.proportionToCenter = proportion_inward(&point, max_cartesian_along_ray);
+		g_array_append_val(sortArray, sortElement);
+		// g_printf("%d %d %d\n", sortElement.targetPoint.x, sortElement.targetPoint.y, sortElement.proportionToCenter );
+	}
+	return sortArray;
 }
 
 
+/** Extract coordinates from sort array, and free the sort array */
+static void targetPointsFromSortArray(PointVector targetPoints,	GArray* sortArray)
+{
+	guint i;
+	for (i = 0; i < targetPoints->len; i++)
+	{
+		g_array_index(targetPoints, Coordinates, i) = g_array_index(sortArray, TSortElementStruct, i).targetPoint;
+	}
+	g_array_free(sortArray, TRUE);
+}
 
+
+#endif /* RESYNTH_BRUSHFIRE_H_ */

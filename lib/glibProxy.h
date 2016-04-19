@@ -1,11 +1,14 @@
 /*
-Proxy for /usr/include/glib-2.0/glib.h
-
-Glib is for portability, on top of ANSI C.
-This is an alternative: does a subset of the same thing but without GPL license.
-
-This is a limited subset: only what is used in synth.
-*/
+ * Proxy for /usr/include/glib-2.0/glib.h
+ * 
+ * Glib is for portability, on top of ANSI C.
+ * This is an alternative: does a subset of the same thing but without GPL license.
+ *
+ * This is a limited subset: only what is used in synth.
+ */
+#pragma once
+#ifndef GLIB_PROXY_H_
+#define GLIB_PROXY_H_
 
 #define guint unsigned int
 #define gint int
@@ -20,8 +23,8 @@ This is a limited subset: only what is used in synth.
 #define guchar unsigned char
 #define gchar char
 
-typedef const void *TConstPointer;
-typedef gint (*TCompareFunc) (TConstPointer  a, TConstPointer  b);
+typedef const void *ConstVoidPtr;
+typedef gint(*CompareFunc) (ConstVoidPtr  a, ConstVoidPtr  b);
 
 // Apparently true, false are in ANSI C but not TRUE, FALSE
 // Use enumerated type?
@@ -58,87 +61,100 @@ since rand() keeps its own internal data.
 typedef void GRand;
 #endif
 
-GRand *
-s_rand_new_with_seed(guint seed);
+GRand * s_rand_new_with_seed(guint seed);
 
-guint
-s_rand_int_range(
-  GRand * prng,   // not used
-  guint lowerBound,
-  guint upperBound
-  );
+guint s_rand_int_range(GRand * prng, guint lowerBound, guint upperBound);
 
 
 /*
-Dynamic 1D array (sequence, vector.)
-
-Note: GArrays are dynamically allocated on the heap
-AND they grow automatically when appended to.
-In synth, they are dynamically allocated
-but the automatic growing is NOT needed,
-since the size is known ahead of allocation.
-IOW, synth only needs dynamically allocated arrays,
-which can be accessed (read and write) by appropriate casting
-with ordinary array indexing syntax.
-The indirection through the GArray struct is NOT needed.
-*/
-
+ * Dynamic 1D array (sequence, vector.)
+ *
+ * Note: GArrays are dynamically allocated on the heap
+ * AND they grow automatically when appended to.
+ * In synth, they are dynamically allocated
+ * but the automatic growing is NOT needed,
+ * since the size is known ahead of allocation.
+ * IOW, synth only needs dynamically allocated arrays,
+ * which can be accessed (read and write) by appropriate casting
+ * with ordinary array indexing syntax.
+ * The indirection through the GArray struct is NOT needed.
+ */
 #ifndef SYNTH_USE_GLIB
+
+/**
+ * \brief Dynamic 1-D Array
+ */
 typedef struct _GArray
 {
-  gchar *data;
-  guint len;
+	/// The data
+	gchar *data;
+	/// The size of the data
+	guint len;
 } GArray;
+
 #endif
 
-// We can always redefine this struct because it is private to glib.
+
+/**
+ * \brief A reference-counted array with more metadata than GArray
+ */
 typedef struct _GRealArray
 {
-  guint8 *data;
-  guint   len;
-  guint   alloc;
-  guint   elt_size;
-  guint   zero_terminated : 1;
-  guint   clear : 1;
-  gint    ref_count;
+	/// The data
+	guint8 *data;
+	/// The size of the data
+	guint   len;
+	/// Capacity
+	guint   capacity;
+	/// Size in number of bytes for the type
+	guint   type_size;
+	/// Flag to indicate zero termination (not used)
+	guint   zero_terminated : 1;
+	/// Flag to indicate whether or not clear (not used)
+	guint   clear : 1;
+	/// Reference count
+	gint    ref_count;
 } GRealArray;
 
 
-#define g_array_index(a,t,i)      (((t*) (void *) (a)->data) [(i)])
+/// Get the value at the specified index
+#define g_array_index(a, t, i)      (((t*) (void *) (a)->data) [(i)])
 
 // Use macro to pass address of 2nd parameter
-#define g_array_append_val(a,v)	  s_array_append_vals (a, &(v), 1)
+#define g_array_append_val(a, v)	GArrayAppendVal (a, &(v), 1)
 
 // Simple redirecting to our implementation
-#define g_array_sized_new(z,c,s,r)  s_array_sized_new (z,c,s,r)
-#define g_array_sort(a,f) s_array_sort (a,f)
-#define g_array_free(p,b) s_array_free(p,b)
+#define g_array_sized_new(z,c,s,r)	GArrayAllocate (z,c,s,r)
+#define g_array_sort(a,f)			GArraySort (a,f)
+#define g_array_free(p,b)			GArrayFree(p,b)
 
-GArray* 
-s_array_sized_new (
-  gboolean zero_terminated,
-  gboolean clear,
-  guint    elt_size,
-  guint    reserved_size);
-			   
-GArray* 
-s_array_append_vals(
-  GArray           *array,
-  TConstPointer     data,
-  int               len   // unused
-  );
 
-void
-s_array_sort (
-  GArray       *farray,
-  TCompareFunc  compare_func
-  );
+//////////////////////////////////////////////////////////////////////////
+// Declarations for arrays etc.
+//////////////////////////////////////////////////////////////////////////
 
-void
-s_array_free(
-  GArray * array,
-  int   cascade
-  );		   
+/**
+ * \brief Allocate an array
+ */
+GArray* GArrayAllocate(gboolean zero_terminated,
+					   gboolean clear,
+					   guint type_size,
+					   guint reserved_size);
+
+/**
+ * \brief Append values to an array
+ */
+GArray* GArrayAppendVal(GArray *array, ConstVoidPtr data, int len);
+
+/**
+ * \brief Sort the array using the compare function provided
+ */
+void GArraySort(GArray *farray, CompareFunc compare_func);
+
+/**
+ * \brief Free the array
+ */
+void GArrayFree(GArray * array, int cascade);
 
 // Proxies for thread mutex
 // Redefine glib mutex to use POSIX pthread mutex
@@ -147,3 +163,5 @@ s_array_free(
 #define g_static_mutex_init(A)      pthread_mutex_init(A, NULL);        // POSIX additional parameter
 #define g_static_mutex_lock(A)      pthread_mutex_lock(A)
 #define g_static_mutex_unlock(A)    pthread_mutex_unlock(A)
+
+#endif /* GLIB_PROXY_H_ */

@@ -121,7 +121,7 @@ set_bytemap(
   for (y=0; y<map->height; y++)
     for (x=0; x<map->width; x++)
     {
-      Coordinates coords = {x,y};
+      Coordinates coords = {static_cast<int>(x), static_cast<int>(y)};
       *bytemap_index(map, coords) = value;
     }
 }
@@ -137,7 +137,7 @@ invert_bytemap(
   for (y=0; y<map->height; y++)
     for (x=0; x<map->width; x++)
     {
-      Coordinates coords = {x,y};
+      Coordinates coords = {static_cast<int>(x), static_cast<int>(y)};
       // Ones complement: bitwise negation
       *bytemap_index(map, coords) = ~ *bytemap_index(map, coords);
     }
