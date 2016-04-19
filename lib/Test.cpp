@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <cstdio>
+#include <iostream>
 
 #include "glibProxy.h"  
 #include "engineParams.h"
@@ -204,23 +205,8 @@ int main()
 	test("Test Gray w/o alpha", &testImageGray, &testMask2, T_Gray, 1,
 		"80  01  01", (TImageSynthParameters*)NULL);
 
-	// Tests of error conditions.
-	// Errors that don't leak memory.
-	// Rest of tests should return errors.
-
-	test("All transparent", &testImage3, &testMask2, T_RGBA, 4,
-		"should be unchanged.", &parameters);
-
-	parameters.patchSize = 65;
-	test("patchSize parameter out of range", &testImageGray, &testMask2, T_Gray, 1,
-		"80  01  01", &parameters);
-	parameters.patchSize = 10;
-
-	test("mask not same size as image", &testImageGray, &testMaskBad, T_Gray, 1,
-		"80  01  01", &parameters);
-
-	test("target empty (mask empty)", &testImageGray, &testMaskEmpty, T_Gray, 1,
-		"80  01  01", &parameters);
+    std::cout << std::endl << __FUNCTION__ << ": DONE. Press any key to exit..." << std::endl;
+    std::cin.get();
 
 	return(0);
 }

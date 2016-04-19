@@ -85,6 +85,7 @@
 #ifdef USE_GLIB_PROXY
 #include <cstddef> 
 #include <cmath>
+#include <iostream>
 #include "glibProxy.h" 
 
 /*
@@ -646,7 +647,7 @@ This error NOT occur in GIMP if selection does not intersect, since then we use 
 	print_processor_time();
 
 	// progress(_("Resynthesizer: synthesizing"));
-
+    
 	refiner(
 		parameters,
 		indices,

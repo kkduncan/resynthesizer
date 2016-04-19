@@ -1,20 +1,20 @@
 /*
-A generic data structure for passing images.
-
-Data is a stream of unpadded pixels.
-Interpretation of pixels (order and count of pixelels (unsigned bytes)) is given by a enum of type TImageFormat.
-Rows padded.
-*/
+ * A generic data structure for passing images.
+ *
+ * Data is a stream of unpadded pixels.
+ * Interpretation of pixels (order and count of pixelels (unsigned bytes)) is given by a enum of type TImageFormat.
+ * Rows padded.
+ */
 
 #ifndef __SYNTH_IMAGE_BUFFER_H__
 #define __SYNTH_IMAGE_BUFFER_H__
 
-typedef struct _ImageBuffer 
+typedef struct _ImageBuffer
 {
-  unsigned char * data; // data must be sequential RGBA for image, sequence of bytes for a mask
-  unsigned int width;
-  unsigned int height;
-  size_t rowBytes;    // Row stride.  unsigned int? doesn't really describe size of a type, but count of bytes in pixmap row
+	unsigned char * data; // data must be sequential RGBA for image, sequence of bytes for a mask
+	unsigned int width;
+	unsigned int height;
+	size_t rowBytes;    // Row stride.  unsigned int? doesn't really describe size of a type, but count of bytes in pixmap row
 }
 ImageBuffer;
 

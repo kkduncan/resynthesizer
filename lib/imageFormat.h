@@ -33,13 +33,13 @@ Not depend on Gimp
 // Enumerates different layouts of pixelels within pixels, for in images
 // This type is exported, needed by callers of library
 // The library lays pixelels out in its own internal format
-typedef enum  ImageFormat 
+typedef enum ImageFormat
 {
-  T_RGB,
-  T_RGBA,
-  T_Gray,
-  T_GrayA
+    T_RGB,
+    T_RGBA,
+    T_Gray,
+    T_GrayA
 } TImageFormat;
-  
+
 #endif /* __SYNTH_IMAGE_FORMAT_H__ */
 
